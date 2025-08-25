@@ -1,0 +1,90 @@
+[
+  {
+    "Id": 1,
+    "title": "Review quarterly budget report",
+    "description": "Analyze Q3 spending and prepare recommendations for Q4 budget allocation",
+    "dueDate": "2024-01-28T23:59:59.000Z",
+    "priority": "high",
+    "categoryId": "1",
+    "completed": false,
+    "createdAt": "2024-01-20T10:30:00.000Z",
+    "completedAt": null
+  },
+  {
+    "Id": 2,
+    "title": "Schedule team standup meetings",
+    "description": "Organize weekly standup meetings for the development team",
+    "dueDate": "2024-01-25T09:00:00.000Z",
+    "priority": "medium",
+    "categoryId": "2",
+    "completed": true,
+    "createdAt": "2024-01-15T14:20:00.000Z",
+    "completedAt": "2024-01-22T16:45:00.000Z"
+  },
+  {
+    "Id": 3,
+    "title": "Update project documentation",
+    "description": "Review and update API documentation and user guides",
+    "dueDate": "2024-01-30T17:00:00.000Z",
+    "priority": "medium",
+    "categoryId": "3",
+    "completed": false,
+    "createdAt": "2024-01-18T11:15:00.000Z",
+    "completedAt": null
+  },
+  {
+    "Id": 4,
+    "title": "Plan weekend hiking trip",
+    "description": "Research trails, book accommodation, and prepare gear list",
+    "dueDate": "2024-01-26T12:00:00.000Z",
+    "priority": "low",
+    "categoryId": "4",
+    "completed": false,
+    "createdAt": "2024-01-19T08:30:00.000Z",
+    "completedAt": null
+  },
+  {
+    "Id": 5,
+    "title": "Complete React component refactoring",
+    "description": "Refactor legacy components to use modern React hooks and patterns",
+    "dueDate": "2024-02-02T18:00:00.000Z",
+    "priority": "high",
+    "categoryId": "3",
+    "completed": false,
+    "createdAt": "2024-01-21T13:45:00.000Z",
+    "completedAt": null
+  },
+  {
+    "Id": 6,
+    "title": "Grocery shopping",
+    "description": "Buy ingredients for meal prep and household essentials",
+    "dueDate": "2024-01-24T19:00:00.000Z",
+    "priority": "medium",
+    "categoryId": "4",
+    "completed": true,
+    "createdAt": "2024-01-22T07:00:00.000Z",
+    "completedAt": "2024-01-23T18:30:00.000Z"
+  },
+  {
+    "Id": 7,
+    "title": "Client presentation preparation",
+    "description": "Create slides and demo for upcoming client meeting",
+    "dueDate": "2024-01-29T14:00:00.000Z",
+    "priority": "high",
+    "categoryId": "1",
+    "completed": false,
+    "createdAt": "2024-01-20T15:20:00.000Z",
+    "completedAt": null
+  },
+  {
+    "Id": 8,
+    "title": "Team building event planning",
+    "description": "Organize monthly team building activity and book venue",
+    "dueDate": "2024-02-05T10:00:00.000Z",
+    "priority": "low",
+    "categoryId": "2",
+    "completed": false,
+    "createdAt": "2024-01-17T12:10:00.000Z",
+    "completedAt": null
+  }
+]
