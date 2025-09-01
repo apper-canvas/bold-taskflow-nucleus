@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Button from "@/components/atoms/Button";
-import FormField from "@/components/molecules/FormField";
-import ApperIcon from "@/components/ApperIcon";
+import RecurringConfig from "@/components/molecules/RecurringConfig";
 import { format } from "date-fns";
+import ApperIcon from "@/components/ApperIcon";
+import FormField from "@/components/molecules/FormField";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
 
 const TaskForm = ({
   task = null,
@@ -11,29 +13,37 @@ const TaskForm = ({
   onSubmit,
   onCancel
 }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: "",
     description: "",
     dueDate: "",
     priority: "medium",
-    categoryId: ""
+    categoryId: "",
+    isRecurring: false,
+    frequency: "daily",
+    selectedDays: [],
+    recurringTime: "09:00"
   });
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (task) {
+if (task) {
       setFormData({
         title: task.title || "",
         description: task.description || "",
         dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : "",
         priority: task.priority || "medium",
-        categoryId: task.categoryId || ""
+        categoryId: task.categoryId || "",
+        isRecurring: task.isRecurring || false,
+        frequency: task.frequency || "daily",
+        selectedDays: task.selectedDays || [],
+        recurringTime: task.recurringTime || "09:00"
       });
     }
   }, [task]);
 
-  const handleChange = (field) => (e) => {
+const handleChange = (field) => (e) => {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -41,7 +51,39 @@ const TaskForm = ({
     }
   };
 
-  const validate = () => {
+  const handleRecurringToggle = () => {
+    setFormData(prev => ({ ...prev, isRecurring: !prev.isRecurring }));
+    if (errors.isRecurring) {
+      setErrors(prev => ({ ...prev, isRecurring: "" }));
+    }
+  };
+
+  const handleFrequencyChange = (frequency) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      frequency,
+      selectedDays: frequency === "daily" || frequency === "monthly" ? [] : prev.selectedDays
+    }));
+    if (errors.frequency) {
+      setErrors(prev => ({ ...prev, frequency: "" }));
+    }
+  };
+
+  const handleDaysChange = (selectedDays) => {
+    setFormData(prev => ({ ...prev, selectedDays }));
+    if (errors.selectedDays) {
+      setErrors(prev => ({ ...prev, selectedDays: "" }));
+    }
+  };
+
+  const handleTimeChange = (recurringTime) => {
+    setFormData(prev => ({ ...prev, recurringTime }));
+    if (errors.recurringTime) {
+      setErrors(prev => ({ ...prev, recurringTime: "" }));
+    }
+  };
+
+const validate = () => {
     const newErrors = {};
     
     if (!formData.title.trim()) {
@@ -52,10 +94,19 @@ const TaskForm = ({
       newErrors.categoryId = "Please select a category";
     }
 
+    // Validate recurring configuration
+    if (formData.isRecurring) {
+      if ((formData.frequency === "weekly" || formData.frequency === "custom") && formData.selectedDays.length === 0) {
+        newErrors.selectedDays = "Please select at least one day";
+      }
+      if (!formData.recurringTime) {
+        newErrors.recurringTime = "Please select a time";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -154,7 +205,17 @@ const TaskForm = ({
               value={formData.dueDate}
               onChange={handleChange("dueDate")}
             />
-
+<RecurringConfig
+              isRecurring={formData.isRecurring}
+              frequency={formData.frequency}
+              selectedDays={formData.selectedDays}
+              recurringTime={formData.recurringTime}
+              onToggleRecurring={handleRecurringToggle}
+              onFrequencyChange={handleFrequencyChange}
+              onDaysChange={handleDaysChange}
+              onTimeChange={handleTimeChange}
+              errors={errors}
+            />
             <div className="flex space-x-3 pt-4">
               <Button
                 type="button"

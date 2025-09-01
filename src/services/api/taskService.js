@@ -28,12 +28,16 @@ class TaskService {
       Math.max(max, task.Id), 0
     );
     
-    const newTask = {
+const newTask = {
       Id: maxId + 1,
       ...taskData,
       completed: false,
       createdAt: new Date().toISOString(),
-      completedAt: null
+      completedAt: null,
+      isRecurring: taskData.isRecurring || false,
+      frequency: taskData.frequency || "daily",
+      selectedDays: taskData.selectedDays || [],
+      recurringTime: taskData.recurringTime || "09:00"
     };
     
     this.tasks.unshift(newTask);
@@ -49,9 +53,13 @@ class TaskService {
     }
     
     const updatedTask = {
-      ...this.tasks[index],
+...this.tasks[index],
       ...taskData,
-      Id: parseInt(id) // Ensure Id remains an integer
+      Id: parseInt(id), // Ensure Id remains an integer
+      isRecurring: taskData.isRecurring !== undefined ? taskData.isRecurring : this.tasks[index].isRecurring,
+      frequency: taskData.frequency || this.tasks[index].frequency,
+      selectedDays: taskData.selectedDays !== undefined ? taskData.selectedDays : this.tasks[index].selectedDays,
+      recurringTime: taskData.recurringTime || this.tasks[index].recurringTime
     };
     
     this.tasks[index] = updatedTask;

@@ -88,6 +88,14 @@ const TaskCard = ({
                     {isOverdue && (
                       <span className="ml-1 text-red-500 font-medium">(Overdue)</span>
                     )}
+</div>
+                )}
+                
+                {task.isRecurring && (
+                  <div className="flex items-center text-xs text-primary bg-primary/10 px-2 py-1 rounded-md">
+                    <ApperIcon name="RotateCcw" size={12} className="mr-1" />
+                    {task.frequency.charAt(0).toUpperCase() + task.frequency.slice(1)}
+                    {task.recurringTime && ` at ${task.recurringTime}`}
                   </div>
                 )}
               </div>
