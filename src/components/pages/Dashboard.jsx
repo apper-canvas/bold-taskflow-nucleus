@@ -5,9 +5,10 @@ import TaskList from "@/components/organisms/TaskList";
 import TaskForm from "@/components/organisms/TaskForm";
 import TaskFilters from "@/components/organisms/TaskFilters";
 import TaskStatsSection from "@/components/organisms/TaskStats";
+import TaskTemplateModal from "@/components/organisms/TaskTemplateModal";
 import { taskService } from "@/services/api/taskService";
 import { categoryService } from "@/services/api/categoryService";
-
+import { templateService } from "@/services/api/templateService";
 const Dashboard = () => {
   // Data state
   const [tasks, setTasks] = useState([]);
@@ -17,7 +18,8 @@ const Dashboard = () => {
 
   // UI state
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
+const [editingTask, setEditingTask] = useState(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter state
@@ -74,9 +76,25 @@ const Dashboard = () => {
     });
   }, [tasks, searchQuery, statusFilter, categoryFilter, priorityFilter]);
 
-  const handleCreateTask = () => {
+const handleCreateTask = () => {
     setEditingTask(null);
     setShowTaskForm(true);
+  };
+
+  const handleShowTemplates = () => {
+    setShowTemplateModal(true);
+  };
+
+  const handleSelectTemplate = async (template) => {
+    try {
+      const taskData = templateService.applyTemplate(template);
+      setEditingTask(taskData);
+      setShowTaskForm(true);
+      setShowTemplateModal(false);
+      toast.info(`Template "${template.title}" applied!`);
+    } catch (error) {
+      toast.error("Failed to apply template");
+    }
   };
 
   const handleEditTask = (task) => {
@@ -151,10 +169,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
+<Header
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onCreateTask={handleCreateTask}
+        onShowTemplates={handleShowTemplates}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -205,7 +224,14 @@ const Dashboard = () => {
             <TaskStatsSection tasks={tasks} />
           </div>
         </div>
-      </main>
+</main>
+
+      {/* Template Gallery Modal */}
+      <TaskTemplateModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
 
       {/* Task Form Modal */}
       {showTaskForm && (

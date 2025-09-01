@@ -34,7 +34,7 @@ if (task) {
         description: task.description || "",
         dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : "",
         priority: task.priority || "medium",
-        categoryId: task.categoryId || "",
+        categoryId: task.categoryId?.toString() || "",
         isRecurring: task.isRecurring || false,
         frequency: task.frequency || "daily",
         selectedDays: task.selectedDays || [],
@@ -141,7 +141,7 @@ const validate = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
-              {task ? "Edit Task" : "Create New Task"}
+{task?.Id ? "Edit Task" : (task?.title ? `Create from Template: ${task.title}` : "Create New Task")}
             </h2>
             <Button
               variant="ghost"

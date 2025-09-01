@@ -6,7 +6,8 @@ import ApperIcon from "@/components/ApperIcon";
 const Header = ({
   searchQuery,
   onSearchChange,
-  onCreateTask
+onCreateTask,
+  onShowTemplates
 }) => {
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm">
@@ -30,6 +31,14 @@ const Header = ({
           </div>
 
           <div className="flex items-center space-x-3">
+            <Button
+variant="secondary"
+              onClick={onShowTemplates}
+              className="mr-3"
+            >
+              <ApperIcon name="Grid3X3" size={16} className="mr-2" />
+              Templates
+            </Button>
             <Button
               variant="primary"
               onClick={onCreateTask}
