@@ -1,70 +1,205 @@
-import categoriesData from "@/services/mockData/categories.json";
+import { toast } from 'react-toastify';
 
 class CategoryService {
   constructor() {
-    this.categories = [...categoriesData];
+    // Initialize ApperClient
+    const { ApperClient } = window.ApperSDK;
+    this.apperClient = new ApperClient({
+      apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+      apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+    });
+    this.tableName = 'category_c';
+  }
+
+  // Map UI field names to database field names
+  mapToDatabase(categoryData) {
+    return {
+      Name: categoryData.name, // Required database field
+      name_c: categoryData.name,
+      color_c: categoryData.color,
+      icon_c: categoryData.icon
+    };
+  }
+
+  // Map database field names to UI field names
+  mapFromDatabase(dbCategory) {
+    return {
+      Id: dbCategory.Id,
+      name: dbCategory.name_c,
+      color: dbCategory.color_c,
+      icon: dbCategory.icon_c
+    };
   }
 
   async getAll() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Return a copy to prevent direct mutations
-    return this.categories.map(category => ({ ...category }));
+    try {
+      const params = {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "color_c"}},
+          {"field": {"Name": "icon_c"}}
+        ],
+        orderBy: [{"fieldName": "Id", "sorttype": "ASC"}]
+      };
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params);
+      
+      if (!response.success) {
+        console.error('Failed to fetch categories:', response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return response.data ? response.data.map(category => this.mapFromDatabase(category)) : [];
+    } catch (error) {
+      console.error('Error fetching categories:', error?.response?.data?.message || error);
+      return [];
+    }
   }
 
   async getById(id) {
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    const category = this.categories.find(category => category.Id === id);
-    return category ? { ...category } : null;
+    try {
+      const params = {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "color_c"}},
+          {"field": {"Name": "icon_c"}}
+        ]
+      };
+
+      const response = await this.apperClient.getRecordById(this.tableName, parseInt(id), params);
+      
+      if (!response?.data) {
+        return null;
+      }
+
+      return this.mapFromDatabase(response.data);
+    } catch (error) {
+      console.error(`Error fetching category ${id}:`, error?.response?.data?.message || error);
+      return null;
+    }
   }
 
   async create(categoryData) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Find the highest existing Id and add 1
-    const maxId = this.categories.reduce((max, category) => 
-      Math.max(max, parseInt(category.Id)), 0
-    );
-    
-    const newCategory = {
-      Id: (maxId + 1).toString(),
-      ...categoryData
-    };
-    
-    this.categories.push(newCategory);
-    return { ...newCategory };
+    try {
+      const dbData = this.mapToDatabase(categoryData);
+
+      const params = {
+        records: [dbData]
+      };
+
+      const response = await this.apperClient.createRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error('Failed to create category:', response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} categories:`, failed);
+          failed.forEach(record => {
+            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
+            if (record.message) toast.error(record.message);
+          });
+        }
+        
+        if (successful.length > 0) {
+          return this.mapFromDatabase(successful[0].data);
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error creating category:', error?.response?.data?.message || error);
+      return null;
+    }
   }
 
   async update(id, categoryData) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-    
-    const index = this.categories.findIndex(category => category.Id === id);
-    if (index === -1) {
-      throw new Error("Category not found");
+    try {
+      const dbData = this.mapToDatabase(categoryData);
+
+      const params = {
+        records: [{
+          Id: parseInt(id),
+          ...dbData
+        }]
+      };
+
+      const response = await this.apperClient.updateRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error('Failed to update category:', response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} categories:`, failed);
+          failed.forEach(record => {
+            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
+            if (record.message) toast.error(record.message);
+          });
+        }
+        
+        if (successful.length > 0) {
+          return this.mapFromDatabase(successful[0].data);
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error updating category:', error?.response?.data?.message || error);
+      return null;
     }
-    
-    const updatedCategory = {
-      ...this.categories[index],
-      ...categoryData,
-      Id: id // Ensure Id remains unchanged
-    };
-    
-    this.categories[index] = updatedCategory;
-    return { ...updatedCategory };
   }
 
   async delete(id) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const index = this.categories.findIndex(category => category.Id === id);
-    if (index === -1) {
-      throw new Error("Category not found");
+    try {
+      const params = { 
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await this.apperClient.deleteRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error('Failed to delete category:', response.message);
+        toast.error(response.message);
+        return false;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to delete ${failed.length} categories:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+        
+        return successful.length > 0;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting category:', error?.response?.data?.message || error);
+      return false;
     }
-    
-    this.categories.splice(index, 1);
-    return true;
   }
 }
 
