@@ -1,4 +1,5 @@
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import React from "react";
 
 class TaskService {
   constructor() {
@@ -213,8 +214,7 @@ class TaskService {
       return null;
     }
   }
-
-  async delete(id) {
+async delete(id) {
     try {
       const params = { 
         RecordIds: [parseInt(id)]
@@ -247,6 +247,85 @@ class TaskService {
       console.error('Error deleting task:', error?.response?.data?.message || error);
       return false;
     }
+  }
+
+  async bulkUpdate(taskIds, updates) {
+    try {
+      const records = taskIds.map(id => ({
+        Id: parseInt(id),
+        ...updates
+      }));
+
+      const params = { records };
+      const response = await this.apperClient.updateRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error('Failed to bulk update tasks:', response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} tasks:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+        
+        return successful.map(r => this.mapFromDatabase(r.data));
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error bulk updating tasks:', error?.response?.data?.message || error);
+      return [];
+    }
+  }
+
+  async bulkDelete(taskIds) {
+    try {
+      const params = { 
+        RecordIds: taskIds.map(id => parseInt(id))
+      };
+
+      const response = await this.apperClient.deleteRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error('Failed to bulk delete tasks:', response.message);
+        toast.error(response.message);
+        return false;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to delete ${failed.length} tasks:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+        
+        return successful.length;
+      }
+      
+      return taskIds.length;
+    } catch (error) {
+      console.error('Error bulk deleting tasks:', error?.response?.data?.message || error);
+      return 0;
+    }
+  }
+
+async bulkArchive(taskIds) {
+    return this.bulkUpdate(taskIds, { 
+      archived: true,
+      archivedAt: new Date().toISOString()
+    });
   }
 
   // Additional utility methods for task management

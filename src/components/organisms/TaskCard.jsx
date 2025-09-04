@@ -14,7 +14,10 @@ const TaskCard = ({
   onToggleComplete,
   onEdit,
   onDelete,
-  className
+  className,
+  selectedTaskIds = [],
+  isSelectMode = false,
+  onToggleBulkSelect
 }) => {
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !task.completed;
   const priorityColors = {
@@ -41,12 +44,19 @@ const TaskCard = ({
         borderLeftWidth: "4px"
       }}
     >
-      <div className="flex items-start space-x-3">
+<div className="flex items-start space-x-3">
         <div className="flex-shrink-0 pt-1">
-          <Checkbox
-            checked={task.completed}
-            onChange={() => onToggleComplete(task.Id)}
-          />
+          {isSelectMode ? (
+            <Checkbox
+              checked={selectedTaskIds.includes(task.Id)}
+              onChange={() => onToggleBulkSelect(task.Id)}
+            />
+          ) : (
+            <Checkbox
+              checked={task.completed}
+              onChange={() => onToggleComplete(task.Id)}
+            />
+          )}
         </div>
         
         <div className="flex-1 min-w-0">

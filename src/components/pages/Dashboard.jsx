@@ -10,7 +10,7 @@ import { taskService } from "@/services/api/taskService";
 import { categoryService } from "@/services/api/categoryService";
 import { templateService } from "@/services/api/templateService";
 const Dashboard = () => {
-  // Data state
+// Data state
   const [tasks, setTasks] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ const Dashboard = () => {
 
   // UI state
   const [showTaskForm, setShowTaskForm] = useState(false);
-const [editingTask, setEditingTask] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -27,6 +27,9 @@ const [editingTask, setEditingTask] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
+  // Bulk selection state
+  const [selectedTaskIds, setSelectedTaskIds] = useState([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
   const loadData = async () => {
     try {
       setLoading(true);
@@ -123,7 +126,7 @@ const handleCreateTask = () => {
     }
   };
 
-  const handleToggleComplete = async (taskId) => {
+const handleToggleComplete = async (taskId) => {
     try {
       const task = tasks.find(t => t.Id === taskId);
       if (!task) return;
@@ -147,7 +150,82 @@ const handleCreateTask = () => {
     }
   };
 
-  const handleDeleteTask = async (taskId) => {
+  const handleToggleBulkSelect = (taskId) => {
+    setSelectedTaskIds(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+    
+    if (!isSelectMode && !selectedTaskIds.includes(taskId)) {
+      setIsSelectMode(true);
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedTaskIds(tasks.map(task => task.Id));
+    setIsSelectMode(true);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedTaskIds([]);
+    setIsSelectMode(false);
+  };
+
+  const handleBulkMarkComplete = async () => {
+    try {
+      const completedTasks = await taskService.bulkUpdate(selectedTaskIds, {
+        completed: true,
+        completedAt: new Date().toISOString()
+      });
+      
+      setTasks(prev => prev.map(task => 
+        completedTasks.find(ct => ct.Id === task.Id) || task
+      ));
+      
+      toast.success(`${selectedTaskIds.length} tasks marked as completed! 🎉`);
+      handleClearSelection();
+    } catch (err) {
+      toast.error("Failed to mark tasks as completed.");
+      console.error("Error bulk completing tasks:", err);
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    try {
+      const archivedTasks = await taskService.bulkArchive(selectedTaskIds);
+      
+      setTasks(prev => prev.map(task => 
+        archivedTasks.find(at => at.Id === task.Id) || task
+      ));
+      
+      toast.success(`${selectedTaskIds.length} tasks archived successfully!`);
+      handleClearSelection();
+    } catch (err) {
+      toast.error("Failed to archive tasks.");
+      console.error("Error bulk archiving tasks:", err);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedTaskIds.length} tasks? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const deletedCount = await taskService.bulkDelete(selectedTaskIds);
+      
+      setTasks(prev => prev.filter(task => !selectedTaskIds.includes(task.Id)));
+      
+      toast.success(`${deletedCount} tasks deleted successfully!`);
+      handleClearSelection();
+    } catch (err) {
+      toast.error("Failed to delete tasks.");
+      console.error("Error bulk deleting tasks:", err);
+    }
+  };
+
+const handleDeleteTask = async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) {
       return;
     }

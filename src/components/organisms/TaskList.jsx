@@ -14,7 +14,10 @@ const TaskList = ({
   onEditTask,
   onDeleteTask,
   onCreateTask,
-  onRetry
+  onRetry,
+  selectedTaskIds = [],
+  isSelectMode = false,
+  onToggleBulkSelect
 }) => {
   if (loading) {
     return <Loading rows={5} />;
@@ -51,12 +54,15 @@ const TaskList = ({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <TaskCard
+<TaskCard
               task={task}
               category={getCategoryById(task.categoryId)}
               onToggleComplete={onToggleComplete}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
+              selectedTaskIds={selectedTaskIds}
+              isSelectMode={isSelectMode}
+              onToggleBulkSelect={onToggleBulkSelect}
             />
           </motion.div>
         ))}
