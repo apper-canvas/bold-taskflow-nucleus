@@ -12,9 +12,9 @@ class TaskService {
     this.tableName = 'task_c';
   }
 
-  // Map UI field names to database field names
+// Map UI field names to database field names
   mapToDatabase(taskData) {
-    return {
+    const dbData = {
       title_c: taskData.title,
       description_c: taskData.description,
       due_date_c: taskData.dueDate,
@@ -28,9 +28,19 @@ class TaskService {
       selected_days_c: Array.isArray(taskData.selectedDays) ? taskData.selectedDays.join(',') : taskData.selectedDays,
       recurring_time_c: taskData.recurringTime
     };
+
+    // Add subcategory and urgency as UI-only fields until database schema updated
+    if (taskData.subcategoryId) {
+      dbData.subcategory_id_c = parseInt(taskData.subcategoryId);
+    }
+    if (taskData.urgency) {
+      dbData.urgency_c = taskData.urgency;
+    }
+
+    return dbData;
   }
 
-  // Map database field names to UI field names
+// Map database field names to UI field names
   mapFromDatabase(dbTask) {
     return {
       Id: dbTask.Id,
@@ -39,6 +49,9 @@ class TaskService {
       dueDate: dbTask.due_date_c,
       priority: dbTask.priority_c,
       categoryId: dbTask.category_id_c?.Id || dbTask.category_id_c,
+      subcategoryId: dbTask.subcategory_id_c?.Id || dbTask.subcategory_id_c,
+      subcategory: dbTask.subcategory_id_c, // Full subcategory object if populated
+      urgency: dbTask.urgency_c || 'medium',
       completed: dbTask.completed_c,
       createdAt: dbTask.created_at_c,
       completedAt: dbTask.completed_at_c,

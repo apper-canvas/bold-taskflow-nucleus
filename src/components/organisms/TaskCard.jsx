@@ -78,7 +78,7 @@ const TaskCard = ({
                 </p>
               )}
               
-              <div className="flex flex-wrap items-center gap-2">
+<div className="flex flex-wrap items-center gap-2">
                 {category && (
                   <CategoryChip
                     category={category}
@@ -86,7 +86,27 @@ const TaskCard = ({
                   />
                 )}
                 
+                {task.subcategory && (
+                  <div className="flex items-center text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+                    <ApperIcon name="Tag" size={12} className="mr-1" />
+                    {task.subcategory.name || task.subcategory}
+                  </div>
+                )}
+                
                 <PriorityBadge priority={task.priority} />
+                
+                {task.urgency && (
+                  <div className={cn(
+                    "flex items-center text-xs px-2 py-1 rounded-md",
+                    task.urgency === "critical" && "text-red-700 bg-red-100",
+                    task.urgency === "high" && "text-orange-700 bg-orange-100", 
+                    task.urgency === "medium" && "text-yellow-700 bg-yellow-100",
+                    task.urgency === "low" && "text-green-700 bg-green-100"
+                  )}>
+                    <ApperIcon name="AlertTriangle" size={12} className="mr-1" />
+                    {task.urgency.charAt(0).toUpperCase() + task.urgency.slice(1)}
+                  </div>
+                )}
                 
                 {task.dueDate && (
                   <div className={cn(
@@ -98,7 +118,7 @@ const TaskCard = ({
                     {isOverdue && (
                       <span className="ml-1 text-red-500 font-medium">(Overdue)</span>
                     )}
-</div>
+                  </div>
                 )}
                 
                 {task.isRecurring && (

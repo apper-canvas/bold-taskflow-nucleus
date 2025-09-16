@@ -1,40 +1,68 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import RecurringConfig from "@/components/molecules/RecurringConfig";
 import { format } from "date-fns";
+import { subcategoryService } from "@/services/api/subcategoryService";
 import ApperIcon from "@/components/ApperIcon";
 import FormField from "@/components/molecules/FormField";
-import Select from "@/components/atoms/Select";
+import RecurringConfig from "@/components/molecules/RecurringConfig";
 import Button from "@/components/atoms/Button";
+import Select from "@/components/atoms/Select";
 
-const TaskForm = ({
-  task = null,
-  categories = [],
-  onSubmit,
-  onCancel
-}) => {
-const [formData, setFormData] = useState({
+const TaskForm = ({ task, categories, onSubmit, onCancel }) => {
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [subcategories, setSubcategories] = useState([]);
+  const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
+
+// Form state
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     dueDate: "",
     priority: "medium",
     categoryId: "",
+    subcategoryId: "",
+    urgency: "medium",
     isRecurring: false,
     frequency: "daily",
     selectedDays: [],
     recurringTime: "09:00"
   });
 
-  const [errors, setErrors] = useState({});
-
+  // Load subcategories when category changes
   useEffect(() => {
-if (task) {
+    const loadSubcategories = async () => {
+      if (formData.categoryId) {
+        setSubcategoriesLoading(true);
+        try {
+          const subcategoriesData = await subcategoryService.getByCategoryId(formData.categoryId);
+          setSubcategories(subcategoriesData);
+        } catch (error) {
+          console.error('Error loading subcategories:', error);
+          setSubcategories([]);
+        } finally {
+          setSubcategoriesLoading(false);
+        }
+      } else {
+        setSubcategories([]);
+        setFormData(prev => ({ ...prev, subcategoryId: "" }));
+      }
+    };
+    
+    loadSubcategories();
+  }, [formData.categoryId]);
+
+// Load task data for editing
+  useEffect(() => {
+    if (task) {
       setFormData({
         title: task.title || "",
         description: task.description || "",
         dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : "",
         priority: task.priority || "medium",
         categoryId: task.categoryId?.toString() || "",
+        subcategoryId: task.subcategoryId?.toString() || "",
+        urgency: task.urgency || "medium",
         isRecurring: task.isRecurring || false,
         frequency: task.frequency || "daily",
         selectedDays: task.selectedDays || [],
@@ -42,7 +70,6 @@ if (task) {
       });
     }
   }, [task]);
-
 const handleChange = (field) => (e) => {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -50,7 +77,6 @@ const handleChange = (field) => (e) => {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
-
   const handleRecurringToggle = () => {
     setFormData(prev => ({ ...prev, isRecurring: !prev.isRecurring }));
     if (errors.isRecurring) {
@@ -82,7 +108,6 @@ const handleChange = (field) => (e) => {
       setErrors(prev => ({ ...prev, recurringTime: "" }));
     }
   };
-
 const validate = () => {
     const newErrors = {};
     
@@ -92,6 +117,10 @@ const validate = () => {
     
     if (!formData.categoryId) {
       newErrors.categoryId = "Please select a category";
+    }
+    
+    if (formData.categoryId && !formData.subcategoryId) {
+      newErrors.subcategoryId = "Please select a subcategory";
     }
 
     // Validate recurring configuration
@@ -107,6 +136,7 @@ const validate = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -140,8 +170,8 @@ const validate = () => {
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-{task?.Id ? "Edit Task" : (task?.title ? `Create from Template: ${task.title}` : "Create New Task")}
+<h2 className="text-xl font-semibold text-gray-900">
+              {task?.Id ? "Edit Task" : (task?.title ? `Create from Template: ${task.title}` : "Create New Task")}
             </h2>
             <Button
               variant="ghost"
@@ -152,8 +182,7 @@ const validate = () => {
               <ApperIcon name="X" size={18} />
             </Button>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+<form onSubmit={handleSubmit} className="space-y-4">
             <FormField
               label="Task Title"
               required
@@ -188,24 +217,57 @@ const validate = () => {
               ))}
             </FormField>
 
-            <FormField
-              label="Priority"
-              type="select"
-              value={formData.priority}
-              onChange={handleChange("priority")}
-            >
-              <option value="low">Low Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
-            </FormField>
+            {formData.categoryId && (
+              <FormField
+                label="Subcategory"
+                type="select"
+                required
+                value={formData.subcategoryId}
+                onChange={handleChange("subcategoryId")}
+                error={errors.subcategoryId}
+              >
+                <option value="">Select a subcategory</option>
+                {subcategories.map(subcategory => (
+                  <option key={subcategory.Id} value={subcategory.Id}>
+                    {subcategory.name}
+                  </option>
+                ))}
+              </FormField>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                label="Priority"
+                type="select"
+                value={formData.priority}
+                onChange={handleChange("priority")}
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+              </FormField>
+
+              <FormField
+                label="Urgency"
+                type="select"
+                value={formData.urgency}
+                onChange={handleChange("urgency")}
+              >
+                <option value="low">Low Urgency</option>
+                <option value="medium">Medium Urgency</option>
+                <option value="high">High Urgency</option>
+                <option value="critical">Critical</option>
+              </FormField>
+            </div>
 
             <FormField
               label="Due Date"
               type="date"
               value={formData.dueDate}
               onChange={handleChange("dueDate")}
-            />
-<RecurringConfig
+/>
+
+            <RecurringConfig
               isRecurring={formData.isRecurring}
               frequency={formData.frequency}
               selectedDays={formData.selectedDays}
